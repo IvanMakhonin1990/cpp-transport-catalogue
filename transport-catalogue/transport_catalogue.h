@@ -22,6 +22,8 @@ struct StopsPairHash {
 struct Bus {
   std::string name;
   std::vector<Stop *> stops;
+  double distance = 0;
+  double curvature = 0;
 };
 
 class TransportCatalogue {

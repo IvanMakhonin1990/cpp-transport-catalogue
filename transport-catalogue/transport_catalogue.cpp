@@ -29,7 +29,30 @@ void TransportCatalogue::AddBus(const string &name,
     assert(stopname_to_stop.end() != it);
     bus.stops.push_back(it->second);
   }
+
+  vector<string_view> names(stops.begin(), stops.end());
+  for (auto stop = stops.begin(); stop != stops.end() - 1;) {
+    auto stop1 = stopname_to_stop.find(*stop);
+    assert(stopname_to_stop.end() != stop1);
+    auto stop2 = stopname_to_stop.find(*++stop);
+    assert(stopname_to_stop.end() != stop2);
+
+    bus.curvature +=
+        ComputeDistance(stop1->second->position, stop2->second->position);
+    auto it =
+        stops_ptr_pair.find(pair<Stop *, Stop *>(stop1->second, stop2->second));
+    if (stops_ptr_pair.end() == it) {
+      it = stops_ptr_pair.find(
+          pair<Stop *, Stop *>(stop2->second, stop1->second));
+    }
+    assert(stops_ptr_pair.end() != it);
+    bus.distance += it->second;
+  }
+  
+  assert(bus.distance > 1.0e-6);
+
   buses.push_back(move(bus));
+  
   for (auto stop : buses.back().stops) {
     stopname_to_buses[stop->name].emplace(buses.back().name);
   }
@@ -66,29 +89,13 @@ string TransportCatalogue::GetBusInfo(std::string_view name) const {
 
   ss << "Bus " << name << ": " << bus.stops.size() << " stops on route, ";
   vector<string> names(bus.stops.size());
-  // mutex m;
-  transform(
-      /* execution::par, */ bus.stops.begin(), bus.stops.end() - 1,
-      bus.stops.begin() + 1, names.begin(), [&](Stop *stop1, Stop *stop2) {
-        {
-          //                    lock_guard<mutex> l(m);
-          curvature += ComputeDistance(stop1->position, stop2->position);
-          auto it = stops_ptr_pair.find(pair<Stop *, Stop *>(stop1, stop2));
-          if (stops_ptr_pair.end() == it) {
-            it = stops_ptr_pair.find(pair<Stop *, Stop *>(stop2, stop1));
-          }
-          assert(stops_ptr_pair.end() != it);
-          dist += it->second;
-        }
-        return stop1->name;
-      });
-  assert(dist > 1.0e-6);
-  names[bus.stops.size() - 1] = bus.stops.back()->name;
+  transform(execution::par, bus.stops.begin(), bus.stops.end(), names.begin(),
+            [&](Stop *stop1) { return stop1->name; });
   sort(execution::par, names.begin(), names.end());
   ss << distance(names.begin(),
                  unique(execution::par, names.begin(), names.end()));
-  ss << " unique stops, " << setprecision(6) << dist << " route length, "
-     << dist / curvature << " curvature";
+  ss << " unique stops, " << setprecision(6) << bus.distance << " route length, "
+     << bus.distance/bus.curvature << " curvature";
 
   return ss.str();
 }

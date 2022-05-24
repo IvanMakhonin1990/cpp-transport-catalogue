@@ -4,6 +4,8 @@
 
 using namespace std;
 
+using namespace Transport::detail;
+
 namespace StatReader {
 	std::pair<RequestType, std::string> ParseInfoRequest(string_view request) {
 		auto [part1, part2] = Split(request, ' ');

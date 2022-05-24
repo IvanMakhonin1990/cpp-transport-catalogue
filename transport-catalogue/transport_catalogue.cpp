@@ -10,29 +10,33 @@
 
 using namespace std;
 
-void TransportCatalogue::AddStop(const string& name, const Coordinates& coordinates) {
+using namespace Transport::Geo;
+
+namespace Transport {
+void TransportCatalogue::AddStop(const string &name,
+                                 const Coordinates &coordinates) {
   stops.push_back({name, coordinates});
   stopname_to_stop[stops.back().name] = &stops.back();
   auto tmp = stopname_to_buses[stops.back().name];
 }
 
-void TransportCatalogue::AddBus(const string& name, const vector<std::string_view>& stops) {
+void TransportCatalogue::AddBus(const string &name,
+                                const vector<std::string_view> &stops) {
   Bus bus;
   bus.name = name;
-    for (auto stop : stops) {
+  for (auto stop : stops) {
     auto it = stopname_to_stop.find(stop);
     assert(stopname_to_stop.end() != it);
     bus.stops.push_back(it->second);
   }
   buses.push_back(move(bus));
-  for (auto stop : buses.back().stops)
-  {
-      stopname_to_buses[stop->name].emplace(buses.back().name);
+  for (auto stop : buses.back().stops) {
+    stopname_to_buses[stop->name].emplace(buses.back().name);
   }
   busname_to_bus[buses.back().name] = &buses.back();
 }
 
-const Bus& TransportCatalogue::FindBus(std::string_view name) const {
+const Bus &TransportCatalogue::FindBus(std::string_view name) const {
   static Bus bus;
   auto it = busname_to_bus.find(name);
   if (busname_to_bus.end() != it) {
@@ -56,15 +60,16 @@ string TransportCatalogue::GetBusInfo(std::string_view name) const {
   double curvature = 0;
   auto bus = FindBus(name);
   if (bus.name.empty()) {
-      return "Bus " + string(name) + ": not found";
+    return "Bus " + string(name) + ": not found";
   }
   assert(!bus.stops.empty() && "Stop's list of bus is empty");
-  
+
   ss << "Bus " << name << ": " << bus.stops.size() << " stops on route, ";
   vector<string> names(bus.stops.size());
-  //mutex m;
-  transform(/* execution::par, */bus.stops.begin(), bus.stops.end() - 1,
-            bus.stops.begin() + 1, names.begin(), [&](Stop *stop1, Stop *stop2) {
+  // mutex m;
+  transform(
+      /* execution::par, */ bus.stops.begin(), bus.stops.end() - 1,
+      bus.stops.begin() + 1, names.begin(), [&](Stop *stop1, Stop *stop2) {
         {
           //                    lock_guard<mutex> l(m);
           curvature += ComputeDistance(stop1->position, stop2->position);
@@ -80,28 +85,28 @@ string TransportCatalogue::GetBusInfo(std::string_view name) const {
   assert(dist > 1.0e-6);
   names[bus.stops.size() - 1] = bus.stops.back()->name;
   sort(execution::par, names.begin(), names.end());
-  ss << distance(names.begin(),unique(execution::par, names.begin(), names.end()));
+  ss << distance(names.begin(),
+                 unique(execution::par, names.begin(), names.end()));
   ss << " unique stops, " << setprecision(6) << dist << " route length, "
      << dist / curvature << " curvature";
-  
+
   return ss.str();
 }
 
 string TransportCatalogue::GetStopInfo(std::string_view name) const {
-    stringstream ss;
-    auto it = stopname_to_buses.find(name);
-    if (stopname_to_buses.end() == it) {
-        ss << "Stop " << name << ": not found";
-    } else if (it->second.empty()) {
-        ss << "Stop " << name << ": no buses";
+  stringstream ss;
+  auto it = stopname_to_buses.find(name);
+  if (stopname_to_buses.end() == it) {
+    ss << "Stop " << name << ": not found";
+  } else if (it->second.empty()) {
+    ss << "Stop " << name << ": no buses";
+  } else {
+    ss << "Stop " << name << ": buses";
+    for (auto bus : it->second) {
+      ss << " " << bus;
     }
-    else {
-        ss << "Stop " << name << ": buses";
-        for (auto bus : it->second) {
-            ss << " " << bus;
-        }
-    }
-    return ss.str();
+  }
+  return ss.str();
 }
 
 template <class T> inline void hash_combine(std::size_t &seed, const T &v) {
@@ -109,9 +114,10 @@ template <class T> inline void hash_combine(std::size_t &seed, const T &v) {
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-size_t StopsPairHash::operator()(const std::pair<Stop *, Stop *> &stops_pair) const {
+size_t
+StopsPairHash::operator()(const std::pair<Stop *, Stop *> &stops_pair) const {
   size_t result = 0;
-  
+
   hash_combine(result, stops_pair.first->name);
   hash_combine(result, stops_pair.first->position.lat);
   hash_combine(result, stops_pair.first->position.lng);
@@ -123,14 +129,16 @@ size_t StopsPairHash::operator()(const std::pair<Stop *, Stop *> &stops_pair) co
   return result;
 }
 
-void TransportCatalogue::AddStopsDistances(const vector<tuple<string, string, double>> &distances) {
+void TransportCatalogue::AddStopsDistances(
+    const vector<tuple<string, string, double>> &distances) {
   for (auto [stop_name1, stop_name2, distance] : distances) {
     SetStopsDistance(stop_name1, stop_name2, distance);
   }
 }
 
 void TransportCatalogue::SetStopsDistance(string_view stop_name1,
-                                          string_view stop_name2, double distance) {
+                                          string_view stop_name2,
+                                          double distance) {
   auto stop1 = stopname_to_stop.find(stop_name1);
   assert(stopname_to_stop.end() != stop1);
   auto stop2 = stopname_to_stop.find(stop_name2);
@@ -153,3 +161,4 @@ double TransportCatalogue::GetStopsDistance(string_view stop_name1,
   assert(stops_ptr_pair.end() != it);
   return it->second;
 }
+} // namespace Transport

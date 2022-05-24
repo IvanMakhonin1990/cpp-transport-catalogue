@@ -11,12 +11,14 @@
 
 using namespace std;
 
+using namespace Transport;
+
 int main() {
 
     int request_count = 0;
     cin >> request_count;
     string line;
-    vector<Request> requests;
+    vector<Transport::InputReader::Request> requests;
     requests.reserve(request_count);
 
     while (request_count >= 0 && getline(cin, line)) {
@@ -25,10 +27,10 @@ int main() {
             requests.push_back(move(line));
         }
     }
-    //assert(requests.size() == request_count);
-
+    
     sort(/*execution::par, */requests.begin(), requests.end(),
-        [](const Request& request1, const Request& request2) {
+         [](const Transport::InputReader::Request &request1,
+            const Transport::InputReader::Request &request2) {
             return request1.request_type < request2.request_type;
         });
 
@@ -36,13 +38,13 @@ int main() {
     std::vector<std::tuple<std::string, std::string, double>> distances;
     for (auto request : requests) {
         switch (request.request_type) {
-        case RequestType::AddStop:
+      case Transport::InputReader::RequestType::AddStop:
         {
             auto [name, coordinates] = ParseStop(request, distances);
             transport_catalogue.AddStop(name, coordinates);
             break;
         }
-        case RequestType::AddBus:
+      case Transport::InputReader::RequestType::AddBus:
         {
             auto [name, stops] = ParseBus(request);
             transport_catalogue.AddBus(name, stops);

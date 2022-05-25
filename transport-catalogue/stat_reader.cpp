@@ -22,7 +22,8 @@ std::pair<RequestType, std::string> ParseInfoRequest(string_view request) {
 }
 
 void ExecuteRequestsToTransportCatalogue(
-    const TransportCatalogue &transport_catalogue, istream& input_stream) {
+    const TransportCatalogue &transport_catalogue, istream &input_stream,
+    std::ostream &output_stream) {
   double request_count = 0;
   string line;
   input_stream >> request_count;
@@ -34,10 +35,10 @@ void ExecuteRequestsToTransportCatalogue(
     auto [request_type, name] = StatReader::ParseInfoRequest(line);
     switch (request_type) {
     case StatReader::RequestType::Bus:
-      cout << transport_catalogue.GetBusInfo(name) << endl;
+      output_stream << transport_catalogue.GetBusInfo(name) << endl;
       break;
     case StatReader::RequestType::Stop:
-      cout << transport_catalogue.GetStopInfo(name) << endl;
+      output_stream << transport_catalogue.GetStopInfo(name) << endl;
       break;
     default:
       assert(false);

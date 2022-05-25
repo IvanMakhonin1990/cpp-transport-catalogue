@@ -24,6 +24,7 @@ struct Bus {
   std::vector<Stop *> stops;
   double distance = 0;
   double curvature = 0;
+  size_t unique_stops = 0;
 };
 
 class TransportCatalogue {

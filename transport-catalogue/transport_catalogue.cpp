@@ -29,9 +29,10 @@ void TransportCatalogue::AddBus(const string &name,
     assert(stopname_to_stop.end() != it);
     bus.stops.push_back(it->second);
   }
-
+  set<string_view, less<>> uniq_stops;
   vector<string_view> names(stops.begin(), stops.end());
   for (auto stop = stops.begin(); stop != stops.end() - 1;) {
+    uniq_stops.emplace(*stop);
     auto stop1 = stopname_to_stop.find(*stop);
     assert(stopname_to_stop.end() != stop1);
     auto stop2 = stopname_to_stop.find(*++stop);
@@ -48,7 +49,8 @@ void TransportCatalogue::AddBus(const string &name,
     assert(stops_ptr_pair.end() != it);
     bus.distance += it->second;
   }
-  
+  uniq_stops.emplace(stops.back());
+  bus.unique_stops = uniq_stops.size();
   assert(bus.distance > 1.0e-6);
 
   buses.push_back(move(bus));
@@ -88,13 +90,7 @@ string TransportCatalogue::GetBusInfo(std::string_view name) const {
   assert(!bus.stops.empty() && "Stop's list of bus is empty");
 
   ss << "Bus " << name << ": " << bus.stops.size() << " stops on route, ";
-  vector<string> names(bus.stops.size());
-  transform(execution::par, bus.stops.begin(), bus.stops.end(), names.begin(),
-            [&](Stop *stop1) { return stop1->name; });
-  sort(execution::par, names.begin(), names.end());
-  ss << distance(names.begin(),
-                 unique(execution::par, names.begin(), names.end()));
-  ss << " unique stops, " << setprecision(6) << bus.distance << " route length, "
+  ss << bus.unique_stops << " unique stops, " << setprecision(6) << bus.distance << " route length, "
      << bus.distance/bus.curvature << " curvature";
 
   return ss.str();

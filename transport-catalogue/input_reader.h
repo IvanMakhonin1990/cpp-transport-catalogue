@@ -4,8 +4,10 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 #include "geo.h"
+#include "transport_catalogue.h"
 
 namespace Transport {
 namespace InputReader {
@@ -24,6 +26,10 @@ ParseStop(const Request &request,
 
 std::pair<std::string, std::vector<std::string_view>>
 ParseBus(const Request &request);
+
+TransportCatalogue
+FillTransportCatalogue(std::istream &input_stream = std::cin);
+
 }
 
 namespace detail {

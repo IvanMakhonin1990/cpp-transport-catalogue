@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string_view>
 #include <system_error>
+#include <algorithm>
 
 #include "input_reader.h"
 
@@ -92,6 +93,51 @@ pair<string, vector<string_view>> ParseBus(const Request &request) {
                        stops_names.rend() - 1);
   }
   return {string(part1), stops_names};
+}
+
+TransportCatalogue
+FillTransportCatalogue(std::istream &input_stream) {
+  int request_count = 0;
+  input_stream >> request_count;
+  string line;
+  vector<Request> requests;
+  requests.reserve(request_count);
+
+  while (request_count >= 0 && getline(input_stream, line)) {
+    --request_count;
+    if (!line.empty()) {
+      requests.push_back(move(line));
+    }
+  }
+
+  sort(requests.begin(), requests.end(),
+       [](const Request &request1, const Request &request2) {
+         return request1.request_type < request2.request_type;
+       });
+
+  bool distances_processed = false;
+  TransportCatalogue transport_catalogue;
+  std::vector<std::tuple<std::string, std::string, double>> distances;
+  for (auto request : requests) {
+    switch (request.request_type) {
+    case RequestType::AddStop: {
+      auto [name, coordinates] = ParseStop(request, distances);
+      transport_catalogue.AddStop(name, coordinates);
+      break;
+    }
+    case RequestType::AddBus: {
+      if (!distances_processed) {
+        transport_catalogue.AddStopsDistances(distances);
+        distances_processed = true;
+      }
+      auto [name, stops] = ParseBus(request);
+      transport_catalogue.AddBus(name, stops);
+      break;
+    }
+    }
+  }
+
+  return transport_catalogue;
 }
 } // namespace InputReader
 

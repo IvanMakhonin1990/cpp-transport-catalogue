@@ -1,0 +1,61 @@
+[
+   {
+      "curvature":1.25248,
+      "request_id":1658922989,
+      "route_length":836740,
+      "stop_count":3,
+      "unique_stop_count":2
+   },
+   {
+      "curvature":1.25248,
+      "request_id":946024612,
+      "route_length":836740,
+      "stop_count":3,
+      "unique_stop_count":2
+   },
+   {
+      "curvature":1.25248,
+      "request_id":1960236243,
+      "route_length":836740,
+      "stop_count":3,
+      "unique_stop_count":2
+   },
+   {
+      "curvature":1.25248,
+      "request_id":946024612,
+      "route_length":836740,
+      "stop_count":3,
+      "unique_stop_count":2
+   },
+   {
+      "buses":[
+         "RkYZl",
+         "i",
+         "jUYheoA3Mcm2 kqTN"
+      ],
+      "request_id":2067965337
+   },
+   {
+      "error_message":"not found",
+      "request_id":1086415934
+   },
+   {
+      "error_message":"not found",
+      "request_id":967287382
+   },
+   {
+      "buses":[
+         "RkYZl",
+         "i",
+         "jUYheoA3Mcm2 kqTN"
+      ],
+      "request_id":1425889316
+   },
+   {
+      "curvature":1.25248,
+      "request_id":1658922989,
+      "route_length":836740,
+      "stop_count":3,
+      "unique_stop_count":2
+   }
+]

@@ -4,10 +4,10 @@
 #include <vector>
 #include <execution>
 #include <cassert>
+#include <iomanip>
 
-#include "input_reader.h"
 #include "transport_catalogue.h"
-#include "stat_reader.h"
+#include "json_reader.h"
 
 using namespace std;
 
@@ -15,6 +15,9 @@ using namespace Transport;
 
 int main() {
 
-    Transport::StatReader::ExecuteRequestsToTransportCatalogue(Transport::InputReader::FillTransportCatalogue());
+
+
+    auto document = Transport::json_reader::ReadAndProcessDocument(std::cin);
+    json::Print(document, std::cout);
     return 0;
 }

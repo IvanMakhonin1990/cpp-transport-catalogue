@@ -1,0 +1,15 @@
+{
+"base_requests":
+[{
+"type": "Stop", "name": "A", "latitude": 0.01, "longitude": 0.02, "road_distances": {"B": 10000}}, {
+"type": "Stop", "name": "B", "latitude": 0.01, "longitude": 0.03, "road_distances": {"C", 1}},{
+"type": "Stop", "name": "C", "latitude": 0.01, "longitude": 0.04, "road_distances": {"A", 100000}}, {
+"type": "Bus", "name": "Bus", "stops": ["A", "B"], "is_roundtrip": true},{
+"type": "Bus", "name": "Bus1", "stops": ["A", "B", "C"], "is_roundtrip": true 
+}],
+"stat_requests":
+[
+{"id": 1, "type": "Bus", "name": "Bus1"},
+{"id": 2, "type": "Stop", "name": "A"}
+]
+}

@@ -249,7 +249,7 @@ Node::Node(const Dict &map) { m_value.emplace<Dict>(map); }
 
 Node::Node(int value) { m_value.emplace<int>(value); }
 
-Node::Node(std::string value) { 
+Node::Node(const std::string& value) {
     m_value.emplace<std::string>(value); 
 }
 
@@ -307,7 +307,7 @@ void Print(const Document& doc, std::ostream& output) {
 
 void PrintValue(std::nullptr_t, std::ostream& out) { out << "null"sv; }
 
-void PrintValue(Array arr, std::ostream& out) { 
+void PrintValue(const Array& arr, std::ostream& out) {
     out << '[';
   for (size_t i = 0; i < arr.size(); ++i) {
       PrintNode(arr[i], out);
@@ -318,7 +318,7 @@ void PrintValue(Array arr, std::ostream& out) {
   out << ']';
 }
 
-void PrintValue(Dict dict, std::ostream& out)
+void PrintValue(const Dict& dict, std::ostream& out)
 {
   out << '{';
   
@@ -353,13 +353,14 @@ void replaceAll(std::string &str, const std::string &from,
                               // 'x' with 'yx'
   }
 }
-void PrintValue(std::string string_value, std::ostream& out)
+void PrintValue(const std::string& string_value, std::ostream& out)
 {
-  replaceAll(string_value, "\\", "\\\\");
-  replaceAll(string_value, "\"", "\\\"");
-  replaceAll(string_value, "\r", "\\r");
-  replaceAll(string_value, "\n", "\\n");
- out << "\"" << string_value << "\"";
+    std::string result = string_value;
+    replaceAll(result, "\\", "\\\\");
+    replaceAll(result, "\"", "\\\"");
+    replaceAll(result, "\r", "\\r");
+    replaceAll(result, "\n", "\\n");
+    out << "\"" << result << "\"";
 }
 
 void PrintNode(const Node& node, std::ostream& out)

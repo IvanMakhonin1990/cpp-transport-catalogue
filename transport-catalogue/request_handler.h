@@ -10,7 +10,7 @@
 
 class RequestHandler {
 public:
-    RequestHandler(const Transport::TransportCatalogue& db, const Transport::renderer::MapRenderer& renderer);
+    RequestHandler(const Transport::TransportCatalogue& db, const Transport::Renderer::MapRenderer& renderer);
 
     std::optional<Transport::domain::BusStat> GetBusStat(const std::string_view& bus_name) const;
 
@@ -20,5 +20,5 @@ public:
 
 private:
     const Transport::TransportCatalogue& db_;
-    const Transport::renderer::MapRenderer& renderer_;
+    const Transport::Renderer::MapRenderer& renderer_;
 };

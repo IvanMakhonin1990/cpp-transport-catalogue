@@ -9,14 +9,13 @@
 #include <vector>
 
 namespace Transport {
-	namespace renderer {
+	namespace Renderer {
 		class MapRenderer {
 		public:
-			MapRenderer(const json::Node& node);
 			svg::Document RenderBuses(const Transport::TransportCatalogue& catalogue) const;
 			json::Node GetRenderedNode(const Transport::TransportCatalogue& catalogue);
 
-		private:
+		public:
 			double m_width = 1200.0;
 			double m_height = 1200.0;
 			double m_padding = 50.0;
@@ -40,6 +39,12 @@ namespace Transport {
 			double m_underlayer_width = 3.0;
 
 			std::vector<svg::Color> m_color_palette = { "green" , svg::Rgb(255, 160, 0), "red" };
+
+		private:
+			void RenderBusesNames(const std::vector<std::string_view>& buses, const Transport::TransportCatalogue& catalogue, const Transport::Geo::SphereProjector& projector, svg::Document& doc) const;
+			void RenderLines(const std::vector<std::string_view>& buses, const Transport::TransportCatalogue& catalogue, const Transport::Geo::SphereProjector& projector, svg::Document& doc) const;
+			void RenderCircles(const std::vector<Transport::domain::Stop*>& stops, const Transport::Geo::SphereProjector& projector, svg::Document& doc) const;
+			void RenderStopsNames(const std::vector<Transport::domain::Stop*>& stops, const Transport::Geo::SphereProjector& projector, svg::Document& doc) const;
 		};
 	}
 }

@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+/.vs/transport
+/x64/Debug
+/transport.vcxproj.user
+/transport.vcxproj.filters
+/transport.vcxproj
+/transport.sln

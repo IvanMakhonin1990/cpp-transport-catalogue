@@ -30,7 +30,7 @@ class Node {
   Node(const Array& arr);
   Node(const Dict& map);
   Node(int value);
-  Node(std::string value);
+  Node(const std::string& value);
   Node(double value);
   Node(bool value);
   Node(std::nullptr_t value);
@@ -64,6 +64,7 @@ class Node {
   
  private:
   Value m_value;
+
 };
 
 inline bool operator==(const Node &lhs, const Node &rhs) {
@@ -95,12 +96,12 @@ struct PrintContext {
 };
 
 void PrintValue(std::nullptr_t, std::ostream& out);
-void PrintValue(Array arr, std::ostream& out);
-void PrintValue(Dict dict, std::ostream& out);
+void PrintValue(const Array& arr, std::ostream& out);
+void PrintValue(const Dict& dict, std::ostream& out);
 void PrintValue(bool val, std::ostream &out);
 void PrintValue(int numeric_value, std::ostream& out);
 void PrintValue(double double_value, std::ostream& out);
-void PrintValue(std::string string_value, std::ostream& out);
+void PrintValue(const std::string& string_value, std::ostream& out);
 
 
 template <typename Value>
@@ -127,6 +128,8 @@ Document Load(std::istream& input);
 
 void Print(const Document& doc, std::ostream& output);
 
+void replaceAll(std::string& str, const std::string& from,
+    const std::string& to);
 
 inline bool operator==(const Document &lhs, const Document &rhs) {
   return lhs.GetRoot().GetValue() == rhs.GetRoot().GetValue();

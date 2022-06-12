@@ -8,7 +8,7 @@
  * можете оставить его пустым.
  */
 
-RequestHandler::RequestHandler(const Transport::TransportCatalogue& db, const Transport::renderer::MapRenderer& renderer):db_(db), renderer_(renderer)
+RequestHandler::RequestHandler(const Transport::TransportCatalogue& db, const Transport::Renderer::MapRenderer& renderer):db_(db), renderer_(renderer)
 {
 }
 

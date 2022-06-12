@@ -6,6 +6,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <cassert>
 
 using namespace std;
 
@@ -15,30 +16,29 @@ using namespace Transport;
 
 using namespace Transport::domain;
 
-namespace Transport::json_reader {
+namespace Transport::JsonReader {
 
    
-    json::Document ReadAndProcessDocument(istream& input) {
+    json::Document JSONReader::ReadAndProcessDocument(istream& input) {
         const auto document = json::Load(input);
         const auto& t = document.GetRoot().AsMap();
         auto catalogue = FillTransportCatalogue(t.at("base_requests"));
 
-        return FillOutputRequests(catalogue, t.at("stat_requests"), t.at("render_settings"));
+        return FillOutputRequests(catalogue, t.at("stat_requests"), ParseRenderSettings(t.at("render_settings")));
     }
 
-    svg::Document ReadAndProcessSvgDocument(std::istream& input)
+    svg::Document JSONReader::ReadAndProcessSvgDocument(std::istream& input)
     {
         const auto document = json::Load(input);
         const auto& t = document.GetRoot().AsMap();
         auto catalogue = FillTransportCatalogue(t.at("base_requests"));
-        Transport::renderer::MapRenderer mr(t.at("render_settings"));
+        Transport::Renderer::MapRenderer mr;
         return mr.RenderBuses(catalogue);
     }
 
-    json::Document FillOutputRequests(const TransportCatalogue& transport, const json::Node& requests, const json::Node& map_settings) {
+    json::Document JSONReader::FillOutputRequests(const TransportCatalogue& transport, const json::Node& requests, const Transport::Renderer::MapRenderer& map_renderer) {
         using namespace json;
-        Transport::renderer::MapRenderer mr(map_settings);
-        RequestHandler request_handler(transport, mr);
+        RequestHandler request_handler(transport, map_renderer);
         
         auto& arrayRequest = requests.AsArray();
         
@@ -107,8 +107,92 @@ namespace Transport::json_reader {
         }
         return Document(std::move(arr));
     }
+    template<typename T>
+    T AddColor(const json::Node& node) {
+        if (node.IsString()) {
+            return node.AsString();
+        }
+        else if (node.IsArray()) {
+            auto& arr = node.AsArray();
+            if (arr.size() == 3) {
+                return svg::Rgb(arr[0].AsInt(), arr[1].AsInt(), arr[2].AsInt());
+            }
+            if (arr.size() == 4) {
+                return  svg::Rgba(arr[0].AsInt(), arr[1].AsInt(), arr[2].AsInt(), arr[3].AsDouble());
+            }
+        }
+        assert(false);
+    }
 
-    TransportCatalogue FillTransportCatalogue(const json::Node& requests) {
+    Transport::Renderer::MapRenderer JSONReader::ParseRenderSettings(const json::Node& node)
+    {
+        Transport::Renderer::MapRenderer map_renderer;
+        assert(node.IsMap());
+        auto& dict = node.AsMap();
+        for (const auto& item : dict) {
+            if ("width" == item.first) {
+                map_renderer.m_width = item.second.AsDouble();
+            }
+            else if ("height" == item.first) {
+                map_renderer.m_height = item.second.AsDouble();
+            }
+            else if ("padding" == item.first) {
+                map_renderer.m_padding = item.second.AsDouble();
+            }
+            else if ("line_width" == item.first) {
+                map_renderer.m_line_width = item.second.AsDouble();
+            }
+            else if ("stop_radius" == item.first) {
+                map_renderer.m_stop_radius = item.second.AsDouble();
+            }
+            else if ("bus_label_font_size" == item.first) {
+                map_renderer.m_bus_label_font_size = item.second.AsInt();
+            }
+            else if ("bus_label_offset" == item.first) {
+                assert(item.second.IsArray());
+                auto& arr = item.second.AsArray();
+                assert(2 == arr.size());
+                map_renderer.m_bus_label_offset_dx = arr.at(0).AsDouble();
+                map_renderer.m_bus_label_offset_dy = arr.at(1).AsDouble();
+            }
+            else if ("stop_label_font_size" == item.first) {
+                map_renderer.m_stop_label_font_size = item.second.AsInt();
+            }
+            else if ("stop_label_offset" == item.first) {
+                assert(item.second.IsArray());
+                auto& arr = item.second.AsArray();
+                assert(2 == arr.size());
+                map_renderer.m_stop_label_offset_dx = arr.at(0).AsDouble();
+                map_renderer.m_stop_label_offset_dy = arr.at(1).AsDouble();
+            }
+            else if ("underlayer_color" == item.first) {
+                map_renderer.m_underlayer_color = AddColor<svg::Color>(item.second);
+            }
+            else if ("underlayer_width" == item.first) {
+                map_renderer.m_underlayer_width = item.second.AsDouble();
+            }
+            else if ("color_palette" == item.first) {
+                auto& arr = item.second.AsArray();
+                map_renderer.m_color_palette = std::vector<svg::Color>(arr.size());
+                std::transform(arr.begin(), arr.end(), map_renderer.m_color_palette.begin(), [](const json::Node& n) {return AddColor<svg::Color>(n); });
+            }
+        }
+        assert(map_renderer.m_width >= 0.0 && map_renderer.m_width <= 100000.0);
+        assert(map_renderer.m_height >= 0.0 && map_renderer.m_height <= 100000.0);
+        assert(map_renderer.m_padding >= 0.0 && map_renderer.m_padding < std::min(map_renderer.m_width, map_renderer.m_height) / 2.0);
+        assert(map_renderer.m_line_width >= 0.0 && map_renderer.m_line_width <= 100000.0);
+        assert(map_renderer.m_stop_radius >= 0.0 && map_renderer.m_stop_radius <= 100000.0);
+        assert(map_renderer.m_bus_label_font_size >= 0.0 && map_renderer.m_bus_label_font_size <= 100000.0);
+        assert(map_renderer.m_bus_label_offset_dx >= -100000.0 && map_renderer.m_bus_label_offset_dx <= 100000.0);
+        assert(map_renderer.m_bus_label_offset_dy >= -100000.0 && map_renderer.m_bus_label_offset_dy <= 100000.0);
+        assert(map_renderer.m_stop_label_font_size >= 0.0 && map_renderer.m_stop_label_font_size <= 100000.0);
+        assert(map_renderer.m_stop_label_offset_dx >= -100000.0 && map_renderer.m_stop_label_offset_dx <= 100000.0);
+        assert(map_renderer.m_stop_label_offset_dy >= -100000.0 && map_renderer.m_stop_label_offset_dy <= 100000.0);
+        assert(map_renderer.m_underlayer_width >= 0.0 && map_renderer.m_underlayer_width <= 100000.0);
+        return map_renderer;
+    }
+
+    TransportCatalogue JSONReader::FillTransportCatalogue(const json::Node& requests) {
         TransportCatalogue transport_catalogue;
         auto& arrayRequest = requests.AsArray();
         std::list<std::tuple<std::string, std::string, double>> distances;

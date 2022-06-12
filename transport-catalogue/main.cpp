@@ -14,10 +14,7 @@ using namespace std;
 using namespace Transport;
 
 int main() {
-
-
-
-    auto document = Transport::json_reader::ReadAndProcessDocument(std::cin);
-    json::Print(document, std::cout);
+    Transport::JsonReader::JSONReader json_reader;
+    json::Print(json_reader.ReadAndProcessDocument(std::cin), std::cout);
     return 0;
 }

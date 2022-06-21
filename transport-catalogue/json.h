@@ -23,110 +23,45 @@ namespace json {
         using variant::variant;
         using Value = variant;
 
-        bool IsInt() const {
-            return std::holds_alternative<int>(*this);
-        }
-        int AsInt() const {
-            using namespace std::literals;
-            if (!IsInt()) {
-                throw std::logic_error("Not an int"s);
-            }
-            return std::get<int>(*this);
-        }
+        bool IsInt() const;
 
-        bool IsPureDouble() const {
-            return std::holds_alternative<double>(*this);
-        }
-        bool IsDouble() const {
-            return IsInt() || IsPureDouble();
-        }
-        double AsDouble() const {
-            using namespace std::literals;
-            if (!IsDouble()) {
-                throw std::logic_error("Not a double"s);
-            }
-            return IsPureDouble() ? std::get<double>(*this) : AsInt();
-        }
+        int AsInt() const;
 
-        bool IsBool() const {
-            return std::holds_alternative<bool>(*this);
-        }
-        bool AsBool() const {
-            using namespace std::literals;
-            if (!IsBool()) {
-                throw std::logic_error("Not a bool"s);
-            }
+        bool IsPureDouble() const;
 
-            return std::get<bool>(*this);
-        }
+        bool IsDouble() const;
 
-        bool IsNull() const {
-            return std::holds_alternative<std::nullptr_t>(*this);
-        }
+        double AsDouble() const;
 
-        bool IsArray() const {
-            return std::holds_alternative<Array>(*this);
-        }
-        const Array& AsArray() const {
-            using namespace std::literals;
-            if (!IsArray()) {
-                throw std::logic_error("Not an array"s);
-            }
+        bool IsBool() const;
 
-            return std::get<Array>(*this);
-        }
-        Array& AsArray(){
-            using namespace std::literals;
-            if (!IsArray()) {
-                throw std::logic_error("Not an array"s);
-            }
+        bool AsBool() const;
 
-            return std::get<Array>(*this);
-        }
+        bool IsNull() const;
 
-        bool IsString() const {
-            return std::holds_alternative<std::string>(*this);
-        }
-        const std::string& AsString() const {
-            using namespace std::literals;
-            if (!IsString()) {
-                throw std::logic_error("Not a string"s);
-            }
+        bool IsArray() const;
 
-            return std::get<std::string>(*this);
-        }
+        const Array& AsArray() const;
 
-        bool IsDict() const {
-            return std::holds_alternative<Dict>(*this);
-        }
-        const Dict& AsDict() const {
-            using namespace std::literals;
-            if (!IsDict()) {
-                throw std::logic_error("Not a dict"s);
-            }
+        Array& AsArray();
 
-            return std::get<Dict>(*this);
-        }
-        Dict& AsDict(){
-            using namespace std::literals;
-            if (!IsDict()) {
-                throw std::logic_error("Not a dict"s);
-            }
+        bool IsString() const;
 
-            return std::get<Dict>(*this);
-        }
+        const std::string& AsString() const;
+
+        bool IsDict() const;
+
+        const Dict& AsDict() const;
+
+        Dict& AsDict();
 
         bool operator==(const Node& rhs) const {
             return GetValue() == rhs.GetValue();
         }
 
-        const Value& GetValue() const {
-            return *this;
-        }
+        const Value& GetValue() const;
 
-        Value& GetValue(){
-            return *this;
-        }
+        Value& GetValue();
     };
 
     inline bool operator!=(const Node& lhs, const Node& rhs) {

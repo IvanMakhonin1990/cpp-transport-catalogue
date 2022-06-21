@@ -164,9 +164,13 @@ svg::Document Transport::Renderer::MapRenderer::RenderBuses(const Transport::Tra
 		});
 
 	Transport::Geo::SphereProjector projector(points.begin(), points.end(), m_width, m_height, m_padding);
+	
 	auto& buses = catalogue.GetBusesNames();
-	RenderBusesNames(buses, catalogue, projector, doc);
+
 	RenderLines(buses, catalogue, projector, doc);
+	RenderBusesNames(buses, catalogue, projector, doc);
+	
+	
 	std::vector<Transport::domain::Stop*> tmp_stops;
 	tmp_stops.reserve(stops.size());
 

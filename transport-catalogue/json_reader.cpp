@@ -1,6 +1,7 @@
 #include "json_reader.h"
 #include "request_handler.h"
 #include "map_renderer.h"
+#include "json_builder.h"
 
 
 #include <vector>
@@ -21,7 +22,7 @@ namespace Transport::JsonReader {
    
     json::Document JSONReader::ReadAndProcessDocument(istream& input) {
         const auto document = json::Load(input);
-        const auto& t = document.GetRoot().AsMap();
+        const auto& t = document.GetRoot().AsDict();
         auto catalogue = FillTransportCatalogue(t.at("base_requests"));
 
         return FillOutputRequests(catalogue, t.at("stat_requests"), ParseRenderSettings(t.at("render_settings")));
@@ -30,7 +31,7 @@ namespace Transport::JsonReader {
     svg::Document JSONReader::ReadAndProcessSvgDocument(std::istream& input)
     {
         const auto document = json::Load(input);
-        const auto& t = document.GetRoot().AsMap();
+        const auto& t = document.GetRoot().AsDict();
         auto catalogue = FillTransportCatalogue(t.at("base_requests"));
         Transport::Renderer::MapRenderer mr;
         return mr.RenderBuses(catalogue);
@@ -44,41 +45,41 @@ namespace Transport::JsonReader {
         
         json::Array arr;
         arr.reserve(arrayRequest.size());
-
+        json::Builder builder;
+        auto arr_context = builder.StartArray();
         for (const auto& request : arrayRequest) {
-            auto& items = request.AsMap();
+            auto& items = request.AsDict();
             auto& type = items.at("type").AsString();
             auto& id = items.at("id");
             if ("Bus" == type) {
-                
+
                 auto bus_stat = request_handler.GetBusStat(items.at("name").AsString());
                 if (bus_stat.has_value()) {
                     auto& v = bus_stat.value();
-                    Dict d = { 
-                        {"curvature", v.curvature}, 
-                        {"request_id", id}, 
-                        {"route_length", v.route_length}, 
-                        {"stop_count", v.stop_count},
-                        {"unique_stop_count", v.unique_stop_count} 
-                    };
-                    arr.push_back(std::move(d));
-                } else {
-                    Dict d = {
-                        {"request_id", id},
-                        {"error_message", "not found"s}
-                    };
-                    arr.push_back(std::move(d));
+                    arr_context.StartDict()
+                        .Key("curvature").Value(v.curvature)
+                        .Key("request_id").Value(id.AsInt())
+                        .Key("route_length").Value(v.route_length)
+                        .Key("stop_count").Value(v.stop_count)
+                        .Key("unique_stop_count").Value(v.unique_stop_count)
+                        .EndDict();
+                }
+                else {
+                    arr_context.StartDict()
+                        .Key("request_id"s).Value(id.AsInt())
+                        .Key("error_message"s).Value("not found"s)
+                        .EndDict();
                 }
             }
             if ("Stop" == type) {
                 auto stops = request_handler.GetBusesByStop(items.at("name").AsString());
                 if (!stops.has_value()) {
-                    Dict d = {
-                        {"request_id", id},
-                        {"error_message", "not found"s}
-                    };
-                    arr.push_back(std::move(d));
-                } else {
+                    arr_context.StartDict()
+                        .Key("request_id").Value(id.AsInt())
+                        .Key("error_message").Value("not found"s)
+                        .EndDict();
+                }
+                else {
                     json::Array stops_array;
                     stops_array.reserve(stops.value().size());
                     for (const auto& s : stops.value()) {
@@ -87,25 +88,27 @@ namespace Transport::JsonReader {
                     std::sort(stops_array.begin(), stops_array.end(), [](const json::Node& lhs, const json::Node& rhs) {
                         return std::lexicographical_compare(lhs.AsString().begin(), lhs.AsString().end(),
                             rhs.AsString().begin(), rhs.AsString().end()); });
-                    Dict d = {
-                        {"buses", std::move(stops_array)},
-                        {"request_id", id}
-                    };
-                    arr.push_back(std::move(d));
+                    auto stops_context = arr_context.StartDict()
+                        .Key("buses").StartArray();
+                    for (auto& s : stops_array) {
+                        stops_context.Value(s.AsString());
+                    }
+                    stops_context.EndArray().Key("request_id").Value(id.AsInt()).EndDict();
+
                 }
             }
             if ("Map" == type) {
                 std::stringstream ss;
                 auto doc = request_handler.RenderMap();
                 doc.Render(ss);
-                Dict d = {
-                        {"map", json::Node(ss.str())},
-                        {"request_id", id}
-                };
-                arr.push_back(std::move(d));
+                arr_context.StartDict()
+                    .Key("map").Value(ss.str())
+                    .Key("request_id").Value(id.AsInt())
+                    .EndDict();
             }
         }
-        return Document(std::move(arr));
+       // auto n = arr_context.EndArray().Build();
+        return Document(arr_context.EndArray().Build());
     }
     template<typename T>
     T AddColor(const json::Node& node) {
@@ -127,8 +130,8 @@ namespace Transport::JsonReader {
     Transport::Renderer::MapRenderer JSONReader::ParseRenderSettings(const json::Node& node)
     {
         Transport::Renderer::MapRenderer map_renderer;
-        assert(node.IsMap());
-        auto& dict = node.AsMap();
+        assert(node.IsDict());
+        auto& dict = node.AsDict();
         for (const auto& item : dict) {
             if ("width" == item.first) {
                 map_renderer.m_width = item.second.AsDouble();
@@ -198,7 +201,7 @@ namespace Transport::JsonReader {
         std::list<std::tuple<std::string, std::string, double>> distances;
         for (auto& item : arrayRequest) {
             Geo::Coordinates coordinates;
-            const auto& attributes = item.AsMap();
+            const auto& attributes = item.AsDict();
             if ("Stop" != attributes.at("type").AsString()) {
                 continue;
             }
@@ -212,7 +215,7 @@ namespace Transport::JsonReader {
                     coordinates.lng = move(attr.second.AsDouble());
                 }
                 else if ("road_distances" == attr.first) {
-                    for (auto& dist : attr.second.AsMap()) {
+                    for (auto& dist : attr.second.AsDict()) {
                         distances.push_back({ stop_name, move(dist.first), move(dist.second.AsDouble()) });
                     }
                 }
@@ -222,7 +225,7 @@ namespace Transport::JsonReader {
         transport_catalogue.AddStopsDistances<std::list<std::tuple<std::string, std::string, double>>>(distances);
 
         for (auto& item : arrayRequest) {
-            const auto& attributes = item.AsMap();
+            const auto& attributes = item.AsDict();
             if ("Bus" != attributes.at("type").AsString()) {
                 continue;
             }

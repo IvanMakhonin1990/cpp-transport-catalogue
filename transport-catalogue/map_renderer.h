@@ -5,6 +5,7 @@
 #include "domain.h"
 #include "geo.h"
 #include "transport_catalogue.h"
+#include "json_builder.h"
 
 #include <vector>
 

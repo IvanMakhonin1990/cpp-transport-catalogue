@@ -200,4 +200,40 @@ double TransportCatalogue::GetStopsDistance(string_view stop_name1,
   assert(stops_ptr_pair.end() != it);
   return it->second;
 }
+void TransportCatalogue::SetBusWaitTime(int bus_wait_time) {
+  m_bus_wait_time = std::move(bus_wait_time);
+}
+
+void TransportCatalogue::SetBusVelocity(int bus_velocity) {
+  m_bus_velocity = std::move(bus_velocity);
+}
+
+int TransportCatalogue::GetBusWaitTime() const {
+  return m_bus_wait_time;
+}
+int TransportCatalogue::GetBusVelocity() const {
+  return m_bus_velocity;
+}
+
+uint32_t Transport::TransportCatalogue::RouteLength(const Bus* bus) const {
+  auto stops = bus->stops;
+  
+  uint32_t distance = transform_reduce(next(stops.begin()), stops.end(), stops.begin(), static_cast<uint32_t>(0), 
+    plus<>(), [this](const Stop* stop1, const Stop* stop2) {
+      return GetStopsDistance(stop2->name, stop1->name); 
+    }
+  );
+  if (!bus->is_roundtrip) {
+    distance += transform_reduce( next(stops.rbegin()), stops.rend(), stops.rbegin(), static_cast<uint32_t>(0),
+      plus<>(),[this](const Stop* stop1, const Stop* stop2) {
+        return GetStopsDistance(stop2->name, stop1->name); 
+      }
+    );
+  }
+  return distance;
+}
+const std::unordered_map<std::string_view, domain::Bus*, std::hash<std::string_view>>& Transport::TransportCatalogue::GetAllBuses() const
+{
+  return busname_to_bus;
+}
 } // namespace Transport

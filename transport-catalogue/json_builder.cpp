@@ -244,6 +244,7 @@ namespace json {
 		m_builder.Value(move(value));
 		return m_builder.GetKeyValueItemContext();
 	}
+
 	DictItemContext& KeyItemContext::StartDict()
 	{
 		m_builder.StartDict();

@@ -89,7 +89,7 @@ namespace json {
 		DictItemContext& StartDict() override;
 		ArrayItemContext& StartArray() override;
 		Builder& EndArray() override;
-
+		
 	private:
 		Builder& EndDict() override;
 		KeyItemContext& Key(std::string&& key) override;
@@ -107,7 +107,7 @@ namespace json {
 
 		KeyItemContext& Key(std::string&& key);
 		Builder& Value(Node::Value&& value);
-
+		
 		json::Node& Build();
 
 		Context& GetContext();

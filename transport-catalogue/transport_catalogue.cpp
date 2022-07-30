@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <sstream>
-#include <execution>
+//#include <execution>
 #include <cassert>
 #include <iomanip>
 #include <charconv>
 #include <mutex>
+#include <numeric>
 
 #include "transport_catalogue.h"
 
@@ -137,8 +138,8 @@ std::optional<std::unordered_set<std::string>> TransportCatalogue::GetBuses(std:
 const std::vector<std::string_view> TransportCatalogue::GetBusesNames() const
 {
     std::vector<std::string_view> result(busname_to_bus.size());
-    std::transform(execution::par, busname_to_bus.begin(), busname_to_bus.end(), result.begin(), [](const auto& arg) {return arg.first; });
-    std::sort(execution::par, result.begin(), result.end(), [](std::string_view lhs, std::string_view rhs) { return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end()); });
+    std::transform(/*execution::par, */busname_to_bus.begin(), busname_to_bus.end(), result.begin(), [](const auto& arg) {return arg.first; });
+    std::sort(/*execution::par, */ result.begin(), result.end(), [](std::string_view lhs, std::string_view rhs) { return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end()); });
     return result;
 }
 
@@ -218,15 +219,15 @@ int TransportCatalogue::GetBusVelocity() const {
 uint32_t Transport::TransportCatalogue::RouteLength(const Bus* bus) const {
   auto stops = bus->stops;
   
-  uint32_t distance = transform_reduce(next(stops.begin()), stops.end(), stops.begin(), static_cast<uint32_t>(0), 
+  uint32_t distance = std::transform_reduce(next(stops.begin()), stops.end(), stops.begin(), static_cast<uint32_t>(0), 
     plus<>(), [this](const Stop* stop1, const Stop* stop2) {
-      return GetStopsDistance(stop2->name, stop1->name); 
+      return static_cast<uint32_t>(GetStopsDistance(stop2->name, stop1->name));
     }
   );
   if (!bus->is_roundtrip) {
-    distance += transform_reduce( next(stops.rbegin()), stops.rend(), stops.rbegin(), static_cast<uint32_t>(0),
+    distance += std::transform_reduce( next(stops.rbegin()), stops.rend(), stops.rbegin(), static_cast<uint32_t>(0),
       plus<>(),[this](const Stop* stop1, const Stop* stop2) {
-        return GetStopsDistance(stop2->name, stop1->name); 
+        return static_cast<uint32_t>(GetStopsDistance(stop2->name, stop1->name));
       }
     );
   }
@@ -235,5 +236,13 @@ uint32_t Transport::TransportCatalogue::RouteLength(const Bus* bus) const {
 const std::unordered_map<std::string_view, domain::Bus*, std::hash<std::string_view>>& Transport::TransportCatalogue::GetAllBuses() const
 {
   return busname_to_bus;
+}
+const std::deque<domain::Stop>& TransportCatalogue::GetAllStops() const
+{
+    return stops;
+}
+const std::unordered_map<std::pair<domain::Stop*, domain::Stop*>, double, StopsPairHash>& TransportCatalogue::GetDistances() const
+{
+    return stops_ptr_pair;
 }
 } // namespace Transport

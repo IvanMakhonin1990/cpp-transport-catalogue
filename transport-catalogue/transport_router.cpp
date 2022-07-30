@@ -59,7 +59,7 @@ namespace Router {
         int span = 1;
         for (auto it2 = it1; it2 != e1; ++it2) {
           graph::VertexId vertex2 = GetVertex(*next(it2));
-          distance += m_transport_catalogue.GetStopsDistance((*it2)->name, (*next(it2))->name);
+          distance += static_cast<uint32_t>(m_transport_catalogue.GetStopsDistance((*it2)->name, (*next(it2))->name));
           m_graph->AddEdge({ vertex1, vertex2, distance / bus_velocity + bus_wait_m_time });
           edges_.push_back({ bus_wait_m_time, *it1, *it2, span, bus });
           ++span;
@@ -74,7 +74,7 @@ namespace Router {
           int span = 1;
           for (auto it2 = it1; it2 != e2; ++it2) {
             graph::VertexId vertex2 = GetVertex(*next(it2));
-            distance += m_transport_catalogue.GetStopsDistance((*it2)->name, (*next(it2))->name);
+            distance += static_cast<uint32_t>(m_transport_catalogue.GetStopsDistance((*it2)->name, (*next(it2))->name));
             m_graph->AddEdge({ vertex1, vertex2, distance / bus_velocity + bus_wait_m_time });
             edges_.push_back({ bus_wait_m_time, *it1, *it2, span, bus });
             ++span;

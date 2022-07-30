@@ -32,7 +32,7 @@ namespace Router {
 
     struct Result {
       std::vector<ActionType> m_atctions;
-      double m_total_time;
+      double m_total_time = 0;
     };
 
     std::optional<Result> Route(const Transport::domain::Stop* from, const Transport::domain::Stop* to);

@@ -41,8 +41,12 @@ namespace Transport {
 			svg::Document ReadAndProcessSvgDocument(std::istream& input);
 
 			void FillTransportCatalogue(const json::Node& requests, const json::Node& routing_settings);
+			
+			void FillTransportCatalogue(const json::Node& requests);
+			
+			void FillTransportCatalogue(const std::string& path);
 
-			json::Document FillOutputRequests(const json::Node& requests, const Transport::Renderer::MapRenderer& map_renderer );
+			json::Document FillOutputRequests(const json::Node& requests, const Transport::Renderer::MapRenderer& map_renderer = Transport::Renderer::MapRenderer());
 
 			Transport::Renderer::MapRenderer ParseRenderSettings(const json::Node& node);
 

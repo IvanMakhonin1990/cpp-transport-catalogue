@@ -67,6 +67,9 @@ namespace Transport {
         uint32_t RouteLength(const domain::Bus* bus) const;
 
         const std::unordered_map<std::string_view, domain::Bus*, std::hash<std::string_view>>& GetAllBuses() const;
+        const std::deque<domain::Stop>& GetAllStops() const;
+        const std::unordered_map<std::pair<domain::Stop*, domain::Stop*>, double,
+            StopsPairHash>& GetDistances() const;
                 
     private:
         std::deque<domain::Stop> stops;

@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <algorithm>
-#include <execution>
+//#include <execution>
 #include <cassert>
 #include <mutex>
 
@@ -179,7 +179,7 @@ svg::Document Transport::Renderer::MapRenderer::RenderBuses(const Transport::Tra
 			tmp_stops.push_back(stop.second);
 		}
 		});
-	std::sort(std::execution::par, tmp_stops.begin(), tmp_stops.end(),
+	std::sort(/*std::execution::par, */tmp_stops.begin(), tmp_stops.end(),
 		[](const Transport::domain::Stop* lhs, const Transport::domain::Stop* rhs) {
 			return std::lexicographical_compare(lhs->name.begin(), lhs->name.end(), rhs->name.begin(), rhs->name.end());
 		});

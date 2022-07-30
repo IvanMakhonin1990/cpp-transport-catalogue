@@ -4,6 +4,7 @@
 #include "json_builder.h"
 #include "transport_router.h"
 #include "json.h"
+#include "serialization.h"
 
 
 #include <vector>
@@ -131,6 +132,7 @@ namespace Transport::JsonReader {
       }
     }
     assert(false);
+    return  svg::Rgba();
   }
 
   Transport::Renderer::MapRenderer JSONReader::ParseRenderSettings(const json::Node& node)
@@ -258,6 +260,65 @@ namespace Transport::JsonReader {
       m_transport_catalogue.AddBus(attributes.at("name").AsString(), stops_view, attributes.at("is_roundtrip").AsBool());
     }
 
+  }
+
+  void JSONReader::FillTransportCatalogue(const json::Node& requests) {
+      auto& arrayRequest = requests.AsArray();
+      std::list<std::tuple<std::string, std::string, double>> distances;
+
+      for (auto& item : arrayRequest) {
+          Geo::Coordinates coordinates;
+          const auto& attributes = item.AsDict();
+          if ("Stop" != attributes.at("type").AsString()) {
+              continue;
+          }
+          const auto& stop_name = attributes.at("name").AsString();
+          for (auto& attr : attributes)
+          {
+              if ("latitude" == attr.first) {
+                  coordinates.lat = move(attr.second.AsDouble());
+              }
+              else if ("longitude" == attr.first) {
+                  coordinates.lng = move(attr.second.AsDouble());
+              }
+              else if ("road_distances" == attr.first) {
+                  for (auto& dist : attr.second.AsDict()) {
+                      distances.push_back({ stop_name, move(dist.first), move(dist.second.AsDouble()) });
+                  }
+              }
+          }
+          m_transport_catalogue.AddStop(stop_name, coordinates);
+      }
+      m_transport_catalogue.AddStopsDistances<std::list<std::tuple<std::string, std::string, double>>>(distances);
+
+      for (auto& item : arrayRequest) {
+          const auto& attributes = item.AsDict();
+          if ("Bus" != attributes.at("type").AsString()) {
+              continue;
+          }
+          auto stops = attributes.at("stops").AsArray();
+          std::vector<std::string_view> stops_view;
+          stops_view.reserve(stops.size());
+          for (auto& stops_item : attributes.at("stops").AsArray()) {
+              stops_view.push_back(stops_item.AsString());
+          }
+          if (attributes.at("is_roundtrip").AsBool()) {
+              //stops_view.push_back(stops_view.front());
+          }
+          else {
+              stops_view.insert(stops_view.end(), stops_view.rbegin() + 1,
+                  stops_view.rend());
+
+          }
+          m_transport_catalogue.AddBus(attributes.at("name").AsString(), stops_view, attributes.at("is_roundtrip").AsBool());
+      }
+
+  }
+
+  void JSONReader::FillTransportCatalogue(const std::string& path) {
+      ifstream in_file(path, ios::binary);
+      assert(in_file);
+      m_transport_catalogue = Transport::Serialization::DeserializeTransportCatalogue(in_file);
   }
 
   void JSONReader::GetJsonRoute(const Router::TransportRouter::Result& route, json::Builder& builder)

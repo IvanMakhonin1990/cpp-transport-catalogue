@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <string_view>
+#include <map>
 
 namespace Transport {
 	namespace JsonReader {
@@ -42,9 +43,12 @@ namespace Transport {
 
 			void FillTransportCatalogue(const json::Node& requests, const json::Node& routing_settings);
 			
-			void FillTransportCatalogue(const json::Node& requests);
+			void FillTransportCatalogue(const std::map<std::string, json::Node>& requests);
 			
-			void FillTransportCatalogue(const std::string& path);
+			template<typename T>
+			void FillTransportCatalogue(const T& ds) {
+			    m_transport_catalogue = ds.GetTransportCatalogue();
+			}
 
 			json::Document FillOutputRequests(const json::Node& requests, const Transport::Renderer::MapRenderer& map_renderer = Transport::Renderer::MapRenderer());
 

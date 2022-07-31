@@ -29,8 +29,63 @@ message DistanceInfo{
 	double distance = 3;
 }
 
+message Rgba {
+  uint32 red = 1;
+  uint32 green = 2;
+  uint32 blue = 3;
+  double opacity = 4;
+}
+
+message Rgb {
+  uint32 red = 1;
+  uint32 green = 2;
+  uint32 blue = 3;
+}
+
+message Color{
+	oneof Value {
+    string StringColor = 1;
+    Rgb rgbColor = 2;
+	Rgba rgbaColor = 3;
+  }
+}
+
+message MapRendererInfo{
+	double m_width = 1;
+	double m_height = 2;
+	double m_padding = 3;
+	double m_line_width = 4;
+	//stops circles radius
+	double m_stop_radius = 5;
+	//text size for buses
+	uint32 m_bus_label_font_size = 6;
+	//dx of text
+	double m_bus_label_offset_dx = 7;
+	//dy of text
+	double m_bus_label_offset_dy = 8;
+	//size of text
+	uint32 m_stop_label_font_size = 9;
+	//offset dx of text
+	double m_stop_label_offset_dx = 10;
+	//offset dy of text
+	double m_stop_label_offset_dy = 11;
+	Color m_underlayer_color = 12;
+	//stroke-width
+	double m_underlayer_width = 13;
+
+	repeated Color m_color_palette = 14;
+
+}
+
 message TransportCatalogueInfo{
 	repeated Bus buses = 1;
 	repeated Stop stops = 2;
 	repeated DistanceInfo distances = 3;
+	int32 m_bus_wait_time = 4;
+    int32 m_bus_velocity = 5;
+}
+
+message DataInfo{
+	TransportCatalogueInfo transportCatalogueInfo = 1;
+	MapRendererInfo mapRendererInfo = 2;
 }

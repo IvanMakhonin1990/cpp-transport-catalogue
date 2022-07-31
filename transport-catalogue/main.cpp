@@ -34,11 +34,14 @@ int main(int argc, char* argv[]) {
     if (mode == "make_base"sv) {
         Transport::JsonReader::JSONReader json_reader;
         const auto document = json::Load(std::cin);
+        json_reader.FillTransportCatalogue(document.GetRoot().AsDict());
         const auto& t = document.GetRoot().AsDict();
-        json_reader.FillTransportCatalogue(t.at("base_requests"));
         auto filePath = t.at("serialization_settings").AsDict().at("file").AsString();
         ofstream output(filePath, std::ios::binary);
-        Transport::Serialization::Serialize(json_reader.GetTransportCatalogue(), output);
+        Transport::Serialization::Serializator s;
+        s.AddTransportCatalogue(json_reader.GetTransportCatalogue());
+        s.SetMapRenderer(json_reader.ParseRenderSettings(t.at("render_settings")));
+        s.Serialize(output);
         // make base here
 
     } else if (mode == "process_requests"sv) {
@@ -46,8 +49,12 @@ int main(int argc, char* argv[]) {
         const auto document = json::Load(std::cin);
         const auto& t = document.GetRoot().AsDict();
         auto filePath = t.at("serialization_settings").AsDict().at("file").AsString();
-        json_reader.FillTransportCatalogue(filePath);
-        json::Print(json_reader.FillOutputRequests(t.at("stat_requests")), std::cout);// , json_reader.ParseRenderSettings(t.at("render_settings")));
+        ifstream in_file(filePath, ios::binary);
+        assert(in_file);
+        Transport::Serialization::Deserializator ds(in_file);
+
+        json_reader.FillTransportCatalogue(ds);
+        json::Print(json_reader.FillOutputRequests(t.at("stat_requests"), ds.GetMapRenderer()), std::cout);// , json_reader.ParseRenderSettings(t.at("render_settings")));
         //// process requests here
 
     } else {

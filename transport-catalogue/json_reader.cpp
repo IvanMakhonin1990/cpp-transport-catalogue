@@ -262,8 +262,14 @@ namespace Transport::JsonReader {
 
   }
 
-  void JSONReader::FillTransportCatalogue(const json::Node& requests) {
-      auto& arrayRequest = requests.AsArray();
+  void JSONReader::FillTransportCatalogue(const std::map<std::string, json::Node>& requests) {
+      if (requests.end() != requests.find("routing_settings")) {
+          m_transport_catalogue.SetBusWaitTime(requests.at("routing_settings").AsDict().at("bus_wait_time").AsInt());
+          m_transport_catalogue.SetBusVelocity(requests.at("routing_settings").AsDict().at("bus_velocity").AsInt());
+      }
+      
+      auto& arrayRequest = requests.at("base_requests").AsArray();
+      auto mp = ParseRenderSettings(requests.at("render_settings"));
       std::list<std::tuple<std::string, std::string, double>> distances;
 
       for (auto& item : arrayRequest) {
@@ -315,12 +321,7 @@ namespace Transport::JsonReader {
 
   }
 
-  void JSONReader::FillTransportCatalogue(const std::string& path) {
-      ifstream in_file(path, ios::binary);
-      assert(in_file);
-      m_transport_catalogue = Transport::Serialization::DeserializeTransportCatalogue(in_file);
-  }
-
+  
   void JSONReader::GetJsonRoute(const Router::TransportRouter::Result& route, json::Builder& builder)
   {
     builder.StartArray();

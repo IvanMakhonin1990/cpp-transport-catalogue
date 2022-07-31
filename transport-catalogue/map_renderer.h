@@ -24,13 +24,13 @@ namespace Transport {
 			//stops circles radius
 			double m_stop_radius = 5.0;
 			//text size for buses
-			size_t m_bus_label_font_size = 20;
+			uint32_t m_bus_label_font_size = 20;
 			//dx of text
 			double m_bus_label_offset_dx = 7.0;
 			//dy of text
 			double m_bus_label_offset_dy = 15.0;
 			//size of text
-			size_t m_stop_label_font_size = 20;
+			uint32_t m_stop_label_font_size = 20;
 			//offset dx of text
 			double m_stop_label_offset_dx = 7.0;
 			//offset dy of text

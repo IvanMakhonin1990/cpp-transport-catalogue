@@ -21,6 +21,7 @@ private:
 
 public:
     explicit Router(const Graph& graph);
+    explicit Router(const Graph* graph);
 
     struct RouteInfo {
         Weight weight;
@@ -32,14 +33,14 @@ public:
     const Graph& GetGraph() const {
         return graph_;
     }
-
-private:
     struct RouteInternalData {
         Weight weight;
         std::optional<EdgeId> prev_edge;
     };
     using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
 
+private:
+   
     void InitializeRoutesInternalData(const Graph& graph) {
         const size_t vertex_count = graph.GetVertexCount();
         for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
@@ -82,6 +83,14 @@ private:
     static constexpr Weight ZERO_WEIGHT{};
     const Graph& graph_;
     RoutesInternalData routes_internal_data_;
+
+public:
+    const RoutesInternalData& GetRoutesInternalData() const {
+        return routes_internal_data_;
+    }
+    RoutesInternalData& GetRoutesInternalData() {
+        return routes_internal_data_;
+    }
 };
 
 template <typename Weight>
@@ -96,6 +105,11 @@ Router<Weight>::Router(const Graph& graph)
     for (VertexId vertex_through = 0; vertex_through < vertex_count; ++vertex_through) {
         RelaxRoutesInternalDataThroughVertex(vertex_count, vertex_through);
     }
+}
+
+template<typename Weight>
+inline Router<Weight>::Router(const Graph* graph):graph_(*graph)
+{
 }
 
 template <typename Weight>

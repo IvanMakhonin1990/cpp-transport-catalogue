@@ -6,31 +6,36 @@
 #include <numeric>
 #include <iterator>
 
-namespace Router {
+
 
     using namespace Transport;
     using namespace Transport::domain;
     using namespace std;
+    using namespace Router;
        
-    TransportRouter::TransportRouter(const TransportCatalogue& transport_catalogue)
-      : m_transport_catalogue(transport_catalogue) {
+    TransporRouter::TransporRouter(const TransportCatalogue& transport_catalogue){
+      //: m_transport_catalogue(transport_catalogue) {
       graph::VertexId vertex_id = 0;
-      double bus_velocity = m_transport_catalogue.GetBusVelocity() * 1000.0 / 60.0;
-      double bus_wait_time = m_transport_catalogue.GetBusWaitTime();
-      auto& stops = m_transport_catalogue.GetStops();
+      double bus_velocity = transport_catalogue.GetBusVelocity() * 1000.0 / 60.0;
+      double bus_wait_time = transport_catalogue.GetBusWaitTime();
+      auto& stops = transport_catalogue.GetStops();
       for (auto it = stops.begin(); it != stops.end(); ++it) {
         stop_vertices_.insert({ &*(it->second), vertex_id++ });
       }
       m_graph = std::make_unique<graph::DirectedWeightedGraph<double>>(stop_vertices_.size());
-      auto buses = m_transport_catalogue.GetAllBuses();
+      auto buses = transport_catalogue.GetAllBuses();
       for (auto it = buses.begin(); it != buses.end(); ++it) {
-        AddBus(&*(it->second), bus_wait_time, bus_velocity);
+        AddBus(transport_catalogue, &*(it->second), bus_wait_time, bus_velocity);
       }
       assert(m_graph);
       m_router = std::make_unique<graph::Router<double>>(*m_graph);
     }
 
-    optional<TransportRouter::Result> TransportRouter::Route(const Stop * from, const Stop * to) {
+    Router::TransporRouter::TransporRouter()
+    {
+    }
+
+    optional<TransporRouter::Result> TransporRouter::Route(const Stop * from, const Stop * to) {
       
       auto route = m_router->BuildRoute(GetVertex(from),
         GetVertex(to));
@@ -50,7 +55,7 @@ namespace Router {
       return result;
     }
 
-    void TransportRouter::AddBus(const Transport::domain::Bus* bus, double bus_wait_m_time, double bus_velocity) {
+    void TransporRouter::AddBus(const Transport::TransportCatalogue& tc, const Transport::domain::Bus* bus, double bus_wait_m_time, double bus_velocity) {
       auto& stops = bus->stops;
       auto e1 = prev(stops.end());
       for (auto it1 = stops.begin(); it1 != e1; ++it1) {
@@ -59,7 +64,7 @@ namespace Router {
         int span = 1;
         for (auto it2 = it1; it2 != e1; ++it2) {
           graph::VertexId vertex2 = GetVertex(*next(it2));
-          distance += static_cast<uint32_t>(m_transport_catalogue.GetStopsDistance((*it2)->name, (*next(it2))->name));
+          distance += static_cast<uint32_t>(tc.GetStopsDistance((*it2)->name, (*next(it2))->name));
           m_graph->AddEdge({ vertex1, vertex2, distance / bus_velocity + bus_wait_m_time });
           edges_.push_back({ bus_wait_m_time, *it1, *it2, span, bus });
           ++span;
@@ -74,7 +79,7 @@ namespace Router {
           int span = 1;
           for (auto it2 = it1; it2 != e2; ++it2) {
             graph::VertexId vertex2 = GetVertex(*next(it2));
-            distance += static_cast<uint32_t>(m_transport_catalogue.GetStopsDistance((*it2)->name, (*next(it2))->name));
+            distance += static_cast<uint32_t>(tc.GetStopsDistance((*it2)->name, (*next(it2))->name));
             m_graph->AddEdge({ vertex1, vertex2, distance / bus_velocity + bus_wait_m_time });
             edges_.push_back({ bus_wait_m_time, *it1, *it2, span, bus });
             ++span;
@@ -83,10 +88,8 @@ namespace Router {
       }
     }
 
-    graph::VertexId TransportRouter::GetVertex(const Transport::domain::Stop* stop) const {
+    graph::VertexId TransporRouter::GetVertex(const Transport::domain::Stop* stop) const {
       auto it = stop_vertices_.find(stop);
       assert(it != stop_vertices_.end());
       return it->second;
     }
-
-  } // namespace Router

@@ -40,7 +40,8 @@ int main(int argc, char* argv[]) {
         ofstream output(filePath, std::ios::binary);
         Transport::Serialization::Serializator s;
         s.AddTransportCatalogue(json_reader.GetTransportCatalogue());
-        s.SetMapRenderer(json_reader.ParseRenderSettings(t.at("render_settings")));
+        s.AddMapRenderer(json_reader.ParseRenderSettings(t.at("render_settings")));
+        s.AddRouter(Router::TransporRouter(json_reader.GetTransportCatalogue()));
         s.Serialize(output);
         // make base here
 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
         Transport::Serialization::Deserializator ds(in_file);
 
         json_reader.FillTransportCatalogue(ds);
-        json::Print(json_reader.FillOutputRequests(t.at("stat_requests"), ds.GetMapRenderer()), std::cout);// , json_reader.ParseRenderSettings(t.at("render_settings")));
+        json::Print(json_reader.FillOutputRequests(t.at("stat_requests"), ds), std::cout);// , json_reader.ParseRenderSettings(t.at("render_settings")));
         //// process requests here
 
     } else {

@@ -30,7 +30,7 @@ namespace Transport::JsonReader {
     const auto& t = document.GetRoot().AsDict();
     FillTransportCatalogue(t.at("base_requests"), t.at("routing_settings"));
 
-    return FillOutputRequests(t.at("stat_requests"), ParseRenderSettings(t.at("render_settings")));
+    return document;//FillOutputRequests(t.at("stat_requests"), ParseRenderSettings(t.at("render_settings")));
   }
 
   svg::Document JSONReader::ReadAndProcessSvgDocument(std::istream& input)
@@ -42,8 +42,10 @@ namespace Transport::JsonReader {
     return mr.RenderBuses(m_transport_catalogue);
   }
 
-  json::Document JSONReader::FillOutputRequests(const json::Node& requests, const Transport::Renderer::MapRenderer& map_renderer) {
+  json::Document JSONReader::FillOutputRequests(const json::Node& requests, Transport::Serialization::Deserializator& ds) {
     using namespace json;
+    auto map_renderer = ds.GetMapRenderer();
+    router_ = ds.GetRouter(m_transport_catalogue);
     RequestHandler request_handler(m_transport_catalogue, map_renderer);
 
     auto& arrayRequest = requests.AsArray();
@@ -322,7 +324,7 @@ namespace Transport::JsonReader {
   }
 
   
-  void JSONReader::GetJsonRoute(const Router::TransportRouter::Result& route, json::Builder& builder)
+  void JSONReader::GetJsonRoute(const Router::TransporRouter::Result& route, json::Builder& builder)
   {
     builder.StartArray();
     for (auto& act : route.m_atctions) {
@@ -341,7 +343,7 @@ namespace Transport::JsonReader {
 
     if (from && to) {
       if (!router_) {
-        router_ = std::make_unique<TransportRouter>(m_transport_catalogue);
+        router_ = std::make_unique<TransporRouter>(m_transport_catalogue);
       }
       auto router = router_->Route(from, to);
       if (router) {

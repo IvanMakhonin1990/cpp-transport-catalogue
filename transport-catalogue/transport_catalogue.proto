@@ -18,6 +18,7 @@ message Bus {
   string name = 1;
   repeated int32 stops = 2;
   bool is_roundtrip = 3;
+  int32 id = 4;
   //double distance = 3;
   //double curvature = 4;
   //uint32 unique_stops = 5;
@@ -85,7 +86,68 @@ message TransportCatalogueInfo{
     int32 m_bus_velocity = 5;
 }
 
+message IncidenceList {
+    repeated uint32 edge_id = 1;
+}
+
+message Edge {
+    uint32 from = 1;
+    uint32 to = 2;
+    double weight = 3;
+}
+
+message Graph {
+    repeated Edge edges = 1;
+    repeated IncidenceList incidence_lists = 2;
+}
+
+message RouteInternalData {
+    double weight = 1;
+    oneof optional_prev_edge {
+        uint32 prev_edge = 2;
+		bool isNull = 3;
+    }
+}
+
+message OptionalRouteInternalData {
+    oneof optional_route_internal_data {
+        RouteInternalData route_internal_data = 1;
+		bool isNull = 2;
+    }
+}
+
+message RoutesInternalData {
+    repeated OptionalRouteInternalData routes_internal_data = 1;
+}
+
+message Router {
+    repeated RoutesInternalData routes_internal_data = 1;
+}
+
+
+message StopById {
+    uint32 id = 1;
+    uint32 stop_id = 2;
+}
+
+message EdgeInfo {
+    double m_is_wait = 1;
+    int32 m_source = 2;
+    int32 m_target = 3;
+    int32 m_span = 4;
+    int32 m_bus = 5;
+ }
+
+message TransportRouter {
+    repeated StopById stop_by_id = 1;
+    Graph graph = 2;
+    Router router = 3;
+	repeated EdgeInfo edgeInfos = 4;
+}
+
+
 message DataInfo{
 	TransportCatalogueInfo transportCatalogueInfo = 1;
 	MapRendererInfo mapRendererInfo = 2;
+	TransportRouter router = 3;
 }
